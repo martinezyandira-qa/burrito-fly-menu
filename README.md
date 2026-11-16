@@ -40,12 +40,12 @@ Si Windows pregunta si permite el acceso a Node.js en la red, elige **Redes priv
 ## 2. Qué revisar (lista de prueba)
 
 **Carta (página principal)**
-- [ ] El banner muestra la foto del local y el nombre "BURRITO FLY".
-- [ ] "Explorar el menú" baja hasta "Nuestra carta".
+- [ ] El banner muestra la foto del local y el logo de Burrito Fly.
+- [ ] Los botones **Español** / **English** cambian el idioma de toda la carta (el activo se ve rosa con ✓). En inglés la dirección es `/en`.
 - [ ] **Wi-Fi** abre una ventana desde abajo con la red `Restaurante-Clientes` y la contraseña `bienvenidos`.
 - [ ] "Copiar contraseña" cambia a **"Copiada"** por 2 segundos y la contraseña queda copiada.
 - [ ] La ventana del Wi-Fi se cierra con "Cerrar", tocando fuera o con la tecla `Esc`.
-- [ ] **Déjanos una reseña** abre otra pestaña. (Hoy apunta a `#`, ver sección 4.)
+- [ ] **Déjanos una reseña** abre en otra pestaña la ventana de Google para escribir una reseña de Burrito Fly (Google pide iniciar sesión).
 - [ ] Los 4 bloques de categoría (con foto) bajan a su sección.
 - [ ] La barra de categorías se queda fija arriba al bajar y marca sola la categoría que estás viendo.
 - [ ] Están los 24 productos con su foto, nombre y precio.
@@ -55,6 +55,7 @@ Si Windows pregunta si permite el acceso a Node.js en la red, elige **Redes priv
 - [ ] "Más de [categoría]" muestra los otros productos de esa categoría y lleva a ellos.
 - [ ] **"Volver a la carta"** regresa a la carta, justo en el producto donde estabas.
 - [ ] Una dirección que no existe (por ejemplo `/producto/xyz`) muestra "No encontramos esta página".
+- [ ] En inglés, el producto se abre en `/en/product/…` y "Back to menu" regresa a `/en`.
 
 **En computadora**
 - [ ] Con la ventana ancha, los productos se ven en 4 columnas y la página de producto en dos columnas (foto a la izquierda, datos a la derecha).
@@ -68,18 +69,19 @@ Lo que ya probé yo: la carta en celular (375 px) y en computadora (1280 px), el
 | Quiero cambiar… | Archivo |
 |---|---|
 | Nombre del restaurante, link de reseñas de Google, red y contraseña del Wi-Fi | `src/config.ts` |
-| Productos, precios, descripciones y categorías | `src/data/menu.ts` |
+| Productos, precios, descripciones y categorías (español e inglés) | `src/data/menu.ts` |
+| Textos de botones y títulos en español e inglés | `src/i18n.ts` |
 | Fotos de productos | `public/productos/<slug>.jpg` (cuadradas, 800 × 800 px) |
 | Foto del local | `public/local-burrito-fly.jpg` |
+| Logo | `public/logo-burrito-fly.svg` |
 | Colores y tipografía | `src/app/globals.css` (bloque `@theme`) y `src/app/layout.tsx` |
 
-**Para agregar un producto:** pon su foto en `public/productos/` con un nombre simple, sin espacios ni tildes (por ejemplo `nachos.jpg`). Luego agrégalo en `src/data/menu.ts` con ese mismo `slug` (`"nachos"`), su nombre, su precio y su descripción. Su página `/producto/nachos` se crea sola.
+**Para agregar un producto:** pon su foto en `public/productos/` con un nombre simple, sin espacios ni tildes (por ejemplo `nachos.jpg`). Luego agrégalo en `src/data/menu.ts` con ese mismo `slug` (`"nachos"`), su nombre, su precio, su descripción y su versión en inglés (`en: { nombre, descripcion }`). Sus páginas `/producto/nachos` y `/en/product/nachos` se crean solas.
 
 ---
 
 ## 4. Pendiente
 
-- **Link de reseñas de Google:** en `src/config.ts`, cambia `ENLACE_RESENAS_GOOGLE = "#"` por el link real.
 - **Publicarlo en internet:** cuando quieras, se puede subir a un hosting (por ejemplo Vercel) y crear el QR para las mesas con la dirección final.
 
 ---
@@ -89,21 +91,28 @@ Lo que ya probé yo: la carta en celular (375 px) y en computadora (1280 px), el
 ```
 src/
   app/
-    layout.tsx                 Fuentes (Playfair Display + Poppins), idioma y título
+    layout.tsx                 Fuentes (Bebas Neue + Poppins), idioma y título
     globals.css                Colores de la propuesta C y animaciones
-    page.tsx                   La carta: banner, Wi-Fi, reseña, categorías y productos
-    producto/[slug]/page.tsx   Página de cada producto (se crean las 24 al compilar)
+    page.tsx                   La carta en español (/)
+    producto/[slug]/page.tsx   Producto en español (/producto/…; se crean las 24 al compilar)
     not-found.tsx              Página "No encontramos esta página"
+    en/                        Las mismas páginas en inglés (/en y /en/product/…)
   components/
+    carta.tsx                  La carta: banner, idioma, Wi-Fi, reseña, categorías y productos
+    pagina-producto.tsx        Página de producto (foto, precio, descripción, "Más de…")
     boton-wifi.tsx             Botón y ventana del Wi-Fi (copiar contraseña)
     barra-categorias.tsx       Barra fija de categorías que marca la sección visible
     tarjeta-producto.tsx       Tarjeta de producto (foto de tamaño fijo, nombre, precio)
-    pie.tsx                    Cierre de la página con el nombre grande
+    pie.tsx                    Cierre de la página con el logo
     iconos.tsx                 Íconos en SVG y la "G" de Google
   config.ts                    Datos generales del restaurante
+  i18n.ts                      Textos de la interfaz en español e inglés
   data/menu.ts                 La carta completa
 public/
   local-burrito-fly.jpg        Foto del local
+  logo-burrito-fly.svg         Logo (pie de página)
+  logo-burrito-fly-claro.svg   Logo con "Sazón Mexicana" en blanco (banner)
+  iphone.html                  Vista de la app dentro de un iPhone
   productos/                   Fotos de los 24 productos
 ```
 

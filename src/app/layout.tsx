@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Poppins } from "next/font/google";
+import { Bebas_Neue, Poppins } from "next/font/google";
 import { RESTAURANTE } from "@/config";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+// Títulos, nombres y precios grandes
+const bebas = Bebas_Neue({
+  variable: "--font-bebas",
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: "400",
 });
+
+// Textos pequeños (descripciones, Wi-Fi): Bebas Neue es solo mayúsculas y la contraseña distingue mayúsculas
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -24,12 +27,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#bcd5eb",
+  themeColor: "#fceba6",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" data-scroll-behavior="smooth" className={`${playfair.variable} ${poppins.variable} antialiased`}>
+    <html lang="es" data-scroll-behavior="smooth" className={`${bebas.variable} ${poppins.variable} antialiased`}>
       <body className="min-h-dvh bg-fondo font-sans text-chocolate">{children}</body>
     </html>
   );

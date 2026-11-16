@@ -2,8 +2,8 @@
 
 /* Paleta y tipografía de Burrito Fly (propuesta C · Bento) */
 @theme {
-  --color-cielo: #bcd5eb;
-  --color-cielo-oscuro: #a6c4de;
+  --color-rosa: #ff2c5b;
+  --color-rosa-oscuro: #e01f4c;
   --color-mantequilla: #fceba6;
   --color-mantequilla-oscuro: #f2d97a;
   --color-chocolate: #3e2520;
@@ -37,12 +37,14 @@
 
 /* Las fuentes vienen de next/font (ver layout.tsx) */
 @theme inline {
-  --font-display: var(--font-playfair), Georgia, serif;
+  --font-display: var(--font-bebas), "Arial Narrow", sans-serif;
   --font-sans: var(--font-poppins), system-ui, sans-serif;
 }
 
 html {
   scroll-behavior: smooth;
+  /* Bebas Neue tiene un solo grosor: que el navegador no invente negritas */
+  font-synthesis-weight: none;
 }
 
 body {

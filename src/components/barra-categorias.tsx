@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 type CategoriaChip = { slug: string; nombre: string; foto: string };
 
 // Barra de categorías fija arriba. Marca sola la categoría que se está viendo.
-export function BarraCategorias({ categorias }: { categorias: CategoriaChip[] }) {
+export function BarraCategorias({ categorias, etiqueta }: { categorias: CategoriaChip[]; etiqueta: string }) {
   const [activa, setActiva] = useState(categorias[0]?.slug);
   const contenedor = useRef<HTMLDivElement>(null);
 
@@ -37,7 +37,7 @@ export function BarraCategorias({ categorias }: { categorias: CategoriaChip[] })
   }, [activa]);
 
   return (
-    <nav aria-label="Categorías" className="sticky top-0 z-20 bg-fondo py-2">
+    <nav aria-label={etiqueta} className="sticky top-0 z-20 bg-fondo py-2">
       <div className="mx-auto max-w-280 px-4">
         <div
           ref={contenedor}

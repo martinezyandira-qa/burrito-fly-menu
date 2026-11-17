@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { fotoProducto, precioTexto, textoProducto, type Producto } from "@/data/menu";
+import { precioTexto, textoProducto, type Producto } from "@/data/menu";
 import { rutaProducto, type Idioma } from "@/i18n";
 import { IconoFlechaDerecha } from "./iconos";
 
@@ -24,7 +24,7 @@ export function TarjetaProducto({ producto, idioma, fondo, conAncla = false, siz
     >
       {/* Tamaño fijo (cuadrado) para que la página no salte al cargar la foto */}
       <span className="relative block aspect-square w-full overflow-hidden rounded-xl bg-white">
-        <Image src={fotoProducto(producto.slug)} alt={nombre} fill sizes={sizes} className="object-cover" />
+        <Image src={producto.imagen} alt={nombre} fill sizes={sizes} className="object-cover" />
       </span>
       <span className="flex flex-col gap-2 px-1 pt-2.5 pb-0.5 pl-1.5">
         <span className="line-clamp-2 min-h-11 font-display text-[22px] leading-none">{nombre}</span>

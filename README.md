@@ -87,6 +87,13 @@ Lo que ya probé yo: la carta en celular (375 px) y en computadora (1280 px), el
 ### Publicación
 El menú está en Vercel, en el proyecto `burrito-fly-menu`, conectado al repositorio de GitHub. Cada vez que se sube un cambio a la rama `main` (`git push`), Vercel vuelve a publicar la página solo, en uno o dos minutos.
 
+### Base de datos (Supabase)
+Los platillos y categorías viven en Supabase, en las tablas `categories` y `menu_items`.
+- `supabase/schema.sql` crea las tablas y la seguridad (RLS): cualquiera puede **leer** las categorías y los platillos con `available = true`; nadie puede escribir con la llave pública.
+- `supabase/seed.sql` carga las 4 categorías y 24 platillos originales (se puede volver a correr sin duplicar).
+- La app lee con `obtenerCarta()` en `src/data/menu.ts`, guardado en caché: un cambio en Supabase se ve en el menú en uno o dos minutos.
+- Variables necesarias (en `.env.local` y en Vercel → Settings → Environment Variables): `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
 ---
 
 ## 5. Cómo está organizado
@@ -110,7 +117,11 @@ src/
     iconos.tsx                 Íconos en SVG y la "G" de Google
   config.ts                    Datos generales del restaurante
   i18n.ts                      Textos de la interfaz en español e inglés
-  data/menu.ts                 La carta completa
+  data/menu.ts                 Lee la carta desde Supabase (obtenerCarta) y sus ayudas
+  lib/supabase.ts              Conexión con Supabase (usa las variables de entorno)
+supabase/
+  schema.sql                   Tablas, índice y seguridad (RLS)
+  seed.sql                     Los 24 platillos originales
 public/
   local-burrito-fly.jpg        Foto del local
   logo-burrito-fly.svg         Logo (pie de página)

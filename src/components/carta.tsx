@@ -6,7 +6,7 @@ import { IconoCheck, IconoFlechaAbajo, LogoGoogle } from "@/components/iconos";
 import { Pie } from "@/components/pie";
 import { TarjetaProducto } from "@/components/tarjeta-producto";
 import { ENLACE_RESENAS_GOOGLE, RESTAURANTE } from "@/config";
-import { CATEGORIAS, TONOS_TARJETA, fotoProducto, nombreCategoria, numeroCategoria } from "@/data/menu";
+import { TONOS_TARJETA, nombreCategoria, numeroCategoria, obtenerCarta } from "@/data/menu";
 import { IDIOMAS, TEXTOS, rutaInicio, type Idioma } from "@/i18n";
 
 // Colores de los bloques de categoría, en orden.
@@ -18,8 +18,10 @@ const TONOS_CATEGORIA = [
 ];
 
 // La carta completa. La usan "/" (español) y "/en" (inglés).
-export function Carta({ idioma }: { idioma: Idioma }) {
+export async function Carta({ idioma }: { idioma: Idioma }) {
   const t = TEXTOS[idioma];
+  // Desde Supabase (en caché): solo platillos disponibles, en orden de categoría.
+  const CATEGORIAS = await obtenerCarta();
   return (
     <div lang={idioma}>
       {/* 1. Banner */}
@@ -112,7 +114,7 @@ export function Carta({ idioma }: { idioma: Idioma }) {
                   className={`flex flex-col rounded-[18px] p-2 transition active:scale-[0.98] ${tono.fondo} ${tono.texto}`}
                 >
                   <span className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl bg-white">
-                    <Image src={fotoProducto(c.imagen)} alt="" fill sizes="(min-width: 768px) 260px, 50vw" className="object-cover" />
+                    <Image src={c.imagen} alt="" fill sizes="(min-width: 768px) 260px, 50vw" className="object-cover" />
                   </span>
                   <span className="flex items-end justify-between gap-2 px-1 pt-2.5 pb-1 pl-1.5">
                     <span className="flex min-w-0 flex-col gap-1">
@@ -133,7 +135,7 @@ export function Carta({ idioma }: { idioma: Idioma }) {
 
         <BarraCategorias
           etiqueta={t.categorias}
-          categorias={CATEGORIAS.map((c) => ({ slug: c.slug, nombre: nombreCategoria(c, idioma), foto: fotoProducto(c.imagen) }))}
+          categorias={CATEGORIAS.map((c) => ({ slug: c.slug, nombre: nombreCategoria(c, idioma), foto: c.imagen }))}
         />
 
         {/* 4. Productos por categoría */}

@@ -6,25 +6,21 @@ import { Suspense } from "react";
 import { IconoFlechaIzquierda } from "@/components/iconos";
 import { Pie } from "@/components/pie";
 import { TarjetaProducto } from "@/components/tarjeta-producto";
-import {
-  CATEGORIAS,
-  buscarProducto,
-  fotoProducto,
-  nombreCategoria,
-  numeroCategoria,
-  precioTexto,
-  textoProducto,
-} from "@/data/menu";
+import { buscarProducto, nombreCategoria, numeroCategoria, obtenerCarta, precioTexto, textoProducto } from "@/data/menu";
 import { TEXTOS, rutaInicio, type Idioma } from "@/i18n";
 
 type Params = Promise<{ slug: string }>;
 
-// Una página por producto al compilar (la usan "/producto/…" y "/en/product/…").
-export const slugsProductos = () => CATEGORIAS.flatMap((c) => c.productos.map((p) => ({ slug: p.slug })));
+// Una página por producto disponible al compilar (la usan "/producto/…" y "/en/product/…").
+// Los platillos que se agreguen después en Supabase se generan la primera vez que alguien los abre.
+export async function slugsProductos() {
+  const categorias = await obtenerCarta();
+  return categorias.flatMap((c) => c.productos.map((p) => ({ slug: p.slug })));
+}
 
 export async function metadataProducto(params: Params, idioma: Idioma): Promise<Metadata> {
   const { slug } = await params;
-  const encontrado = buscarProducto(slug);
+  const encontrado = await buscarProducto(slug);
   if (!encontrado) return {};
   const { nombre, descripcion } = textoProducto(encontrado.producto, idioma);
   return { title: nombre, description: descripcion };
@@ -67,7 +63,7 @@ function EsqueletoProducto() {
 async function DetalleProducto({ params, idioma }: { params: Params; idioma: Idioma }) {
   const t = TEXTOS[idioma];
   const { slug } = await params;
-  const encontrado = buscarProducto(slug);
+  const encontrado = await buscarProducto(slug);
   if (!encontrado) notFound();
   const { producto, categoria, indiceCategoria } = encontrado;
   const relacionados = categoria.productos.filter((p) => p.slug !== producto.slug);
@@ -88,7 +84,7 @@ async function DetalleProducto({ params, idioma }: { params: Params; idioma: Idi
         </Link>
         <span className="inline-flex min-h-9 min-w-0 items-center gap-2 rounded-full border border-gris-borde py-0 pr-3.5 pl-1 text-[11px] font-semibold tracking-[0.1em] uppercase">
           <span className="relative size-7 flex-none overflow-hidden rounded-full bg-white">
-            <Image src={fotoProducto(categoria.imagen)} alt="" fill sizes="28px" className="object-cover" />
+            <Image src={categoria.imagen} alt="" fill sizes="28px" className="object-cover" />
           </span>
           <span className="truncate">{categoriaNombre}</span>
         </span>
@@ -99,7 +95,7 @@ async function DetalleProducto({ params, idioma }: { params: Params; idioma: Idi
           <section aria-label={t.fotoProducto} className="rounded-[22px] bg-rosa p-3">
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-white">
               <Image
-                src={fotoProducto(producto.slug)}
+                src={producto.imagen}
                 alt={nombre}
                 fill
                 loading="eager"

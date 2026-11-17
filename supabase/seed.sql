@@ -1,0 +1,135 @@
+-- Burrito Fly · Datos actuales del menú (4 categorías, 24 platillos)
+-- Córrelo DESPUÉS de schema.sql, en Supabase → SQL Editor.
+-- Se puede volver a correr: si un slug ya existe, actualiza sus datos en vez de duplicarlo.
+
+begin;
+
+insert into public.categories (slug, name, name_en, image_url, sort_order) values
+  ('entradas', 'Entradas y acompañantes', 'Starters & sides', '/productos/alitas-bbq.jpg', 1),
+  ('platos-fuertes', 'Platos fuertes', 'Main dishes', '/productos/burrito.jpg', 2),
+  ('postres', 'Postres', 'Desserts', '/productos/brownie-helado.jpg', 3),
+  ('bebidas', 'Bebidas', 'Drinks', '/productos/batido-fresa.jpg', 4)
+on conflict (slug) do update set
+  name = excluded.name,
+  name_en = excluded.name_en,
+  image_url = excluded.image_url,
+  sort_order = excluded.sort_order;
+
+insert into public.menu_items
+  (category_id, slug, name, name_en, description, description_en, price, image_url, available, sort_order)
+select c.id, v.slug, v.name, v.name_en, v.description, v.description_en, v.price, v.image_url, true, v.sort_order
+from (values
+  ('entradas', 'alitas-bbq', 'Alitas BBQ', 'BBQ wings',
+   'Alitas de pollo bañadas en salsa BBQ ahumada y glaseada, con bastones de apio y zanahoria.',
+   'Chicken wings tossed in a smoky, glazed BBQ sauce, with celery and carrot sticks.',
+   9.99, '/productos/alitas-bbq.jpg', 1),
+  ('entradas', 'chicken-tenders', 'Chicken tenders', 'Chicken tenders',
+   'Tiras de pechuga de pollo empanizadas y crujientes, con salsa de miel y mostaza.',
+   'Crispy breaded chicken breast strips, with honey mustard sauce.',
+   7.99, '/productos/chicken-tenders.jpg', 2),
+  ('entradas', 'nuggets', 'Nuggets (10)', 'Nuggets (10)',
+   'Diez trocitos de pollo empanizados, dorados y crujientes. Ideales para compartir o para los niños.',
+   'Ten golden, crispy breaded chicken bites. Great for sharing or for the kids.',
+   6.49, '/productos/nuggets.jpg', 3),
+  ('entradas', 'empanadas', 'Empanadas (3)', 'Empanadas (3)',
+   'Empanadas fritas de masa crujiente rellenas de carne molida sazonada, con salsa chimichurri.',
+   'Fried empanadas with a crispy crust, filled with seasoned ground beef, served with chimichurri sauce.',
+   5.49, '/productos/empanadas.jpg', 4),
+  ('entradas', 'papas-fritas', 'Papas fritas', 'French fries',
+   'Papas doradas, crujientes por fuera y suaves por dentro, con un toque de sal.',
+   'Golden fries, crispy on the outside and soft on the inside, with a touch of salt.',
+   3.99, '/productos/papas-fritas.jpg', 5),
+  ('platos-fuertes', 'hamburguesa-tocino', 'Hamburguesa con tocino', 'Bacon burger',
+   'Jugosa carne a la parrilla con queso cheddar derretido, tocino crujiente, lechuga y tomate en pan brioche con ajonjolí.',
+   'Juicy grilled beef patty with melted cheddar cheese, crispy bacon, lettuce and tomato on a sesame brioche bun.',
+   10.99, '/productos/hamburguesa-tocino.jpg', 1),
+  ('platos-fuertes', 'pizza-pepperoni', 'Pizza de pepperoni', 'Pepperoni pizza',
+   'Masa horneada con bordes dorados, salsa de tomate, abundante queso mozzarella y pepperoni.',
+   'Oven-baked crust with golden edges, tomato sauce, plenty of mozzarella cheese and pepperoni.',
+   12.99, '/productos/pizza-pepperoni.jpg', 2),
+  ('platos-fuertes', 'pollo-frito', 'Pollo frito (3 piezas)', 'Fried chicken (3 pieces)',
+   'Piezas de pollo marinado con empanizado dorado y crujiente, jugosas por dentro.',
+   'Marinated chicken pieces with a golden, crispy breading, juicy on the inside.',
+   8.99, '/productos/pollo-frito.jpg', 3),
+  ('platos-fuertes', 'burrito', 'Burrito', 'Burrito',
+   'Tortilla de harina rellena de carne sazonada, arroz rojo, frijoles negros y queso fundido.',
+   'Flour tortilla filled with seasoned beef, red rice, black beans and melted cheese.',
+   8.99, '/productos/burrito.jpg', 4),
+  ('platos-fuertes', 'tacos', 'Tacos (3)', 'Tacos (3)',
+   'Tortillas de maíz con carne asada, cebolla y cilantro frescos, servidos con limón.',
+   'Corn tortillas with carne asada, fresh onion and cilantro, served with lime.',
+   7.99, '/productos/tacos.jpg', 5),
+  ('platos-fuertes', 'quesadilla', 'Quesadilla', 'Quesadilla',
+   'Tortilla dorada rellena de pollo deshebrado y queso derretido, acompañada de guacamole y crema.',
+   'Golden tortilla filled with shredded chicken and melted cheese, served with guacamole and sour cream.',
+   7.49, '/productos/quesadilla.jpg', 6),
+  ('platos-fuertes', 'sandwich-club', 'Sándwich club', 'Club sandwich',
+   'Pan tostado en capas con pavo, tocineta, queso cheddar, lechuga, tomate y mayonesa.',
+   'Layers of toasted bread with turkey, bacon, cheddar cheese, lettuce, tomato and mayonnaise.',
+   7.49, '/productos/sandwich-club.jpg', 7),
+  ('platos-fuertes', 'ensalada-cesar', 'Ensalada César', 'Caesar salad',
+   'Lechuga romana con pechuga de pollo a la parrilla, crutones, queso parmesano y aderezo César.',
+   'Romaine lettuce with grilled chicken breast, croutons, parmesan cheese and Caesar dressing.',
+   8.49, '/productos/ensalada-cesar.jpg', 8),
+  ('platos-fuertes', 'perro-caliente', 'Perro caliente', 'Hot dog',
+   'Salchicha a la parrilla en pan suave con kétchup, mostaza y cebolla picada.',
+   'Grilled sausage on a soft bun with ketchup, mustard and chopped onion.',
+   4.99, '/productos/perro-caliente.jpg', 9),
+  ('postres', 'brownie-helado', 'Brownie con helado', 'Brownie with ice cream',
+   'Brownie de chocolate tibio con una bola de helado de vainilla y salsa de chocolate.',
+   'Warm chocolate brownie with a scoop of vanilla ice cream and chocolate sauce.',
+   5.99, '/productos/brownie-helado.jpg', 1),
+  ('postres', 'cheesecake', 'Cheesecake', 'Cheesecake',
+   'Rebanada de pastel de queso cremoso sobre base de galleta, con salsa de fresa y una fresa entera.',
+   'A slice of creamy cheesecake on a cookie crust, with strawberry sauce and a whole strawberry.',
+   5.49, '/productos/cheesecake.jpg', 2),
+  ('postres', 'donas', 'Donas (3)', 'Donuts (3)',
+   'Tres donas esponjosas: glaseada clásica, cubierta de chocolate y rosa con chispas de colores.',
+   'Three fluffy donuts: classic glazed, chocolate frosted, and pink with rainbow sprinkles.',
+   4.49, '/productos/donas.jpg', 3),
+  ('bebidas', 'batido-fresa', 'Batido de fresa', 'Strawberry milkshake',
+   'Batido cremoso de fresa con crema batida y una fresa fresca encima.',
+   'Creamy strawberry milkshake topped with whipped cream and a fresh strawberry.',
+   4.99, '/productos/batido-fresa.jpg', 1),
+  ('bebidas', 'cafe-latte', 'Café latte', 'Caffè latte',
+   'Espresso con leche cremosa al vapor y arte latte en la espuma.',
+   'Espresso with creamy steamed milk and latte art on the foam.',
+   3.49, '/productos/cafe-latte.jpg', 2),
+  ('bebidas', 'limonada', 'Limonada', 'Lemonade',
+   'Limonada natural y refrescante con hielo, rodajas de limón y hojas de hierbabuena.',
+   'Fresh, natural lemonade with ice, lemon slices and mint leaves.',
+   2.99, '/productos/limonada.jpg', 3),
+  ('bebidas', 'jugo-naranja', 'Jugo de naranja', 'Orange juice',
+   'Jugo de naranja natural, recién exprimido.',
+   'Natural, freshly squeezed orange juice.',
+   3.49, '/productos/jugo-naranja.jpg', 4),
+  ('bebidas', 'coca-cola', 'Coca-Cola', 'Coca-Cola',
+   'Refresco de cola clásico de la familia Coca-Cola.',
+   'Classic cola soft drink from the Coca-Cola family.',
+   2.49, '/productos/coca-cola.jpg', 5),
+  ('bebidas', 'pepsi', 'Pepsi', 'Pepsi',
+   'Refresco de cola de la familia Pepsi.',
+   'Cola soft drink from the Pepsi family.',
+   2.49, '/productos/pepsi.jpg', 6),
+  ('bebidas', '7up', '7Up', '7Up',
+   'Refresco de lima-limón de la familia Pepsi.',
+   'Lemon-lime soft drink from the Pepsi family.',
+   2.49, '/productos/7up.jpg', 7)
+) as v (category_slug, slug, name, name_en, description, description_en, price, image_url, sort_order)
+join public.categories c on c.slug = v.category_slug
+on conflict (slug) do update set
+  category_id = excluded.category_id,
+  name = excluded.name,
+  name_en = excluded.name_en,
+  description = excluded.description,
+  description_en = excluded.description_en,
+  price = excluded.price,
+  image_url = excluded.image_url,
+  sort_order = excluded.sort_order;
+
+commit;
+
+-- Revisión: debe dar 4 y 24.
+select
+  (select count(*) from public.categories) as categorias,
+  (select count(*) from public.menu_items) as platillos;

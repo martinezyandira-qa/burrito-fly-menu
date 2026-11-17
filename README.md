@@ -82,7 +82,10 @@ Lo que ya probé yo: la carta en celular (375 px) y en computadora (1280 px), el
 
 ## 4. Pendiente
 
-- **Publicarlo en internet:** cuando quieras, se puede subir a un hosting (por ejemplo Vercel) y crear el QR para las mesas con la dirección final.
+- **QR para las mesas:** crearlo con la dirección publicada, https://burrito-fly-menu.vercel.app (en inglés: https://burrito-fly-menu.vercel.app/en).
+
+### Publicación
+El menú está en Vercel, en el proyecto `burrito-fly-menu`, conectado al repositorio de GitHub. Cada vez que se sube un cambio a la rama `main` (`git push`), Vercel vuelve a publicar la página solo, en uno o dos minutos.
 
 ---
 

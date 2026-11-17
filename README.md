@@ -103,6 +103,15 @@ Los platillos y categorías viven en Supabase, en las tablas `categories` y `men
 - Al guardar, el panel borra la caché del menú (`updateTag("menu")`), así el menú público muestra el cambio de inmediato, sin volver a publicar.
 - Nunca se usa la llave `service_role`: todo se escribe con la sesión del admin y la llave pública, y RLS decide.
 
+### Pedidos
+- Carrito: botón "Agregar" en cada platillo, cantidades, nota por platillo y botón flotante. Se guarda en `localStorage` (`src/lib/carrito.ts`).
+- `/pedido` y `/en/order`: resumen, nombre, teléfono (10 dígitos), para recoger o a domicilio (con dirección), notas y confirmación con número de pedido.
+- `supabase/pedidos.sql` crea `orders` (número desde #1001) y `order_items` (nombre y precio al momento del pedido), y la función `create_order`.
+- **Precios y total los calcula Supabase** leyendo `menu_items`; el navegador solo manda id, cantidad y nota. Rechaza platillos inexistentes o agotados, cantidades fuera de 1–20, y avisa si los precios cambiaron.
+- RLS: el público no puede leer, crear directo, editar ni borrar pedidos; solo los admins.
+- Anti-spam: campo oculto (honeypot), mínimo 3 segundos para enviar y máximo 3 pedidos por teléfono cada 10 minutos.
+- Panel: `/admin/pedidos` con los más nuevos primero, estado (Nuevo → Preparando → Listo → Entregado / Cancelado) y actualización automática cada 30 segundos.
+
 ---
 
 ## 5. Cómo está organizado
@@ -138,6 +147,7 @@ supabase/
   schema.sql                   Tablas, índice y seguridad (RLS)
   seed.sql                     Los 24 platillos originales
   admin.sql                    Tabla admins, reglas de escritura y bucket de fotos
+  pedidos.sql                  Tablas de pedidos, RLS y función create_order
 public/
   local-burrito-fly.jpg        Foto del local
   logo-burrito-fly.svg         Logo (pie de página)

@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AgregarProducto } from "@/components/carrito/agregar-producto";
+import { CarritoFlotante } from "@/components/carrito/carrito-flotante";
 import { IconoFlechaIzquierda } from "@/components/iconos";
 import { Pie } from "@/components/pie";
 import { TarjetaProducto } from "@/components/tarjeta-producto";
@@ -42,6 +44,7 @@ export function PaginaProducto({ params, idioma }: { params: Params; idioma: Idi
         <DetalleProducto params={params} idioma={idioma} />
       </Suspense>
       <Pie />
+      <CarritoFlotante idioma={idioma} />
     </div>
   );
 }
@@ -117,6 +120,17 @@ async function DetalleProducto({ params, idioma }: { params: Params; idioma: Idi
               <span className="inline-flex min-h-12 items-center self-start rounded-full bg-mantequilla px-5.5 text-[22px] font-bold tabular-nums">
                 {precioTexto(producto.precio)}
               </span>
+              <AgregarProducto
+                idioma={idioma}
+                producto={{
+                  id: producto.id,
+                  slug: producto.slug,
+                  nombre: producto.nombre,
+                  nombreEn: producto.en.nombre,
+                  precio: producto.precio,
+                  imagen: producto.imagen,
+                }}
+              />
             </section>
 
             {descripcion && (

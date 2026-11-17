@@ -6,6 +6,8 @@ import type { Idioma } from "@/i18n";
 import { supabase } from "@/lib/supabase";
 
 export type Producto = {
+  /** id en Supabase (lo usa el carrito al enviar el pedido) */
+  id: number;
   slug: string;
   nombre: string;
   precio: number;
@@ -28,6 +30,7 @@ export type Categoria = {
 
 // Así llegan las filas desde Supabase.
 type FilaPlatillo = {
+  id: number;
   slug: string;
   name: string;
   name_en: string;
@@ -67,7 +70,7 @@ export async function obtenerCarta(): Promise<Categoria[]> {
   const { data, error } = await supabase
     .from("categories")
     .select(
-      "slug, name, name_en, image_url, sort_order, menu_items (slug, name, name_en, description, description_en, price, image_url, sort_order)",
+      "slug, name, name_en, image_url, sort_order, menu_items (id, slug, name, name_en, description, description_en, price, image_url, sort_order)",
     )
     .eq("menu_items.available", true)
     .order("sort_order", { ascending: true })
@@ -79,6 +82,7 @@ export async function obtenerCarta(): Promise<Categoria[]> {
   return (data ?? [])
     .map((c) => {
       const productos = c.menu_items.map((p) => ({
+        id: p.id,
         slug: p.slug,
         nombre: p.name,
         precio: Number(p.price),
@@ -99,7 +103,7 @@ export async function obtenerCarta(): Promise<Categoria[]> {
     .filter((c) => c.productos.length > 0);
 }
 
-export const precioTexto = (precio: number) => `$${precio.toFixed(2)}`;
+export { precioTexto } from "@/lib/precio";
 
 export const numeroCategoria = (indice: number) => String(indice + 1).padStart(2, "0");
 

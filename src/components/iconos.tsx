@@ -64,6 +64,35 @@ export const IconoCheck = (p: Props) => (
   </Trazo>
 );
 
+export const IconoMas = (p: Props) => (
+  <Trazo {...p} grosor={2.4}>
+    <path d="M12 5v14" />
+    <path d="M5 12h14" />
+  </Trazo>
+);
+
+export const IconoMenos = (p: Props) => (
+  <Trazo {...p} grosor={2.4}>
+    <path d="M5 12h14" />
+  </Trazo>
+);
+
+export const IconoBolsa = (p: Props) => (
+  <Trazo {...p}>
+    <path d="M6 8h12l-1 12H7L6 8z" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+  </Trazo>
+);
+
+export const IconoBasura = (p: Props) => (
+  <Trazo {...p}>
+    <path d="M4 7h16" />
+    <path d="M10 11v6M14 11v6" />
+    <path d="M6 7l1 13h10l1-13" />
+    <path d="M9 7V4h6v3" />
+  </Trazo>
+);
+
 export const LogoGoogle = ({ size = 20, className }: Props) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" className={className}>
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

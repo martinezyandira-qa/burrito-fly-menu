@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { BarraCategorias } from "@/components/barra-categorias";
 import { BotonWifi } from "@/components/boton-wifi";
+import { CarritoFlotante } from "@/components/carrito/carrito-flotante";
 import { IconoCheck, IconoFlechaAbajo, LogoGoogle } from "@/components/iconos";
 import { Pie } from "@/components/pie";
 import { TarjetaProducto } from "@/components/tarjeta-producto";
@@ -168,6 +169,7 @@ export async function Carta({ idioma }: { idioma: Idioma }) {
       </section>
 
       <Pie />
+      <CarritoFlotante idioma={idioma} />
     </div>
   );
 }

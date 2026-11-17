@@ -6,7 +6,7 @@
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { ETIQUETA_MENU } from "@/data/menu";
-import { clienteAdmin, crearSlug } from "@/lib/admin";
+import { ESTADOS_PEDIDO, clienteAdmin, crearSlug, type EstadoPedido } from "@/lib/admin";
 import { BUCKET_FOTOS, rutaEnBucket } from "@/lib/supabase-config";
 import { crearClienteServidor } from "@/lib/supabase-servidor";
 
@@ -143,6 +143,33 @@ export async function borrarPlatillo(id: number): Promise<Resultado> {
     if (error) return { error: `No se pudo borrar: ${error.message}` };
     await borrarFotoDelBucket(supabase, platillo?.image_url);
     menuCambio();
+    refresh();
+    return { ok: true };
+  } catch (e) {
+    return { error: mensaje(e) };
+  }
+}
+
+// ---------- Pedidos ----------
+
+export async function cambiarEstadoPedido(id: number, estado: EstadoPedido): Promise<Resultado> {
+  try {
+    if (!ESTADOS_PEDIDO.includes(estado)) return { error: "Estado inválido." };
+    const supabase = await clienteAdmin();
+    const { error } = await supabase.from("orders").update({ status: estado }).eq("id", id);
+    if (error) return { error: `No se pudo cambiar: ${error.message}` };
+    refresh();
+    return { ok: true };
+  } catch (e) {
+    return { error: mensaje(e) };
+  }
+}
+
+export async function borrarPedido(id: number): Promise<Resultado> {
+  try {
+    const supabase = await clienteAdmin();
+    const { error } = await supabase.from("orders").delete().eq("id", id);
+    if (error) return { error: `No se pudo borrar: ${error.message}` };
     refresh();
     return { ok: true };
   } catch (e) {

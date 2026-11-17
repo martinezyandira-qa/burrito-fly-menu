@@ -88,6 +88,42 @@ export async function obtenerPlatilloAdmin(id: number): Promise<PlatilloAdmin | 
   return data ? { ...data, price: Number(data.price) } : null;
 }
 
+export const ESTADOS_PEDIDO = ["nuevo", "preparando", "listo", "entregado", "cancelado"] as const;
+export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];
+
+export type PedidoAdmin = {
+  id: number;
+  order_number: number;
+  customer_name: string;
+  phone: string;
+  order_type: "recoger" | "domicilio";
+  address: string | null;
+  notes: string | null;
+  total: number;
+  status: EstadoPedido;
+  created_at: string;
+  order_items: { id: number; item_name: string; unit_price: number; quantity: number; note: string | null }[];
+};
+
+/** Pedidos más recientes primero (solo admins pueden leerlos, por RLS). */
+export async function obtenerPedidosAdmin(limite = 60): Promise<PedidoAdmin[]> {
+  const supabase = await crearClienteServidor();
+  const { data, error } = await supabase
+    .from("orders")
+    .select(
+      "id, order_number, customer_name, phone, order_type, address, notes, total, status, created_at, order_items (id, item_name, unit_price, quantity, note)",
+    )
+    .order("created_at", { ascending: false })
+    .order("id", { referencedTable: "order_items" })
+    .limit(limite);
+  if (error) throw new Error(`No se pudieron leer los pedidos: ${error.message}`);
+  return (data ?? []).map((p) => ({
+    ...p,
+    total: Number(p.total),
+    order_items: (p.order_items ?? []).map((l) => ({ ...l, unit_price: Number(l.unit_price) })),
+  })) as PedidoAdmin[];
+}
+
 /** "Tacos al Pastor (3)" → "tacos-al-pastor-3" */
 export function crearSlug(texto: string) {
   return (

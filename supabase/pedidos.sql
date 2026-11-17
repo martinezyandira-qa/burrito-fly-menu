@@ -256,8 +256,11 @@ grant execute on function public.create_order(text, text, text, text, text, json
 
 -- 6. Estado del pedido para el cliente ----------------------------------------------
 -- El cliente guarda en su navegador la clave secreta (tracking_token) de su pedido y con
--- ella pregunta el estado. Solo responde número, estado, motivo, tipo y total: nunca
--- nombre, teléfono ni dirección. Máximo 5 claves por consulta y pedidos de los últimos 2 días.
+-- ella pregunta el estado. Solo responde lo que la tarjeta muestra: número, estado, motivo y
+-- tipo (para decir "pasa a recogerlo" o "va en camino"). Nunca nombre, teléfono, dirección,
+-- notas, platillos ni total. El número de pedido NO sirve para consultar: solo la clave
+-- (UUID aleatorio de 122 bits, imposible de adivinar). Máximo 5 claves por consulta y
+-- pedidos de los últimos 2 días.
 create or replace function public.order_status(p_tokens uuid[])
 returns jsonb
 language sql
@@ -270,9 +273,7 @@ as $$
            'order_number', o.order_number,
            'status', o.status,
            'status_reason', o.status_reason,
-           'order_type', o.order_type,
-           'total', o.total,
-           'status_changed_at', o.status_changed_at
+           'order_type', o.order_type
          ) order by o.created_at desc), '[]'::jsonb)
   from public.orders o
   where o.tracking_token = any (p_tokens[1:5])

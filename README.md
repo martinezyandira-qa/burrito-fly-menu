@@ -111,7 +111,7 @@ Los platillos y categorías viven en Supabase, en las tablas `categories` y `men
 - RLS: el público no puede leer, crear directo, editar ni borrar pedidos; solo los admins.
 - Anti-spam: campo oculto (honeypot), mínimo 3 segundos para enviar y máximo 3 pedidos por teléfono cada 10 minutos.
 - Panel: `/admin/pedidos` con los más nuevos primero y actualización automática cada 30 segundos. Cada pedido nuevo se **acepta** o se **rechaza**; después avanza Preparando → Listo → Entregado, o se cancela. Rechazar y cancelar piden un motivo opcional para el cliente. Los pasos permitidos están en `src/lib/estados-pedido.ts`.
-- Seguimiento del cliente: al pedir, su navegador guarda una clave secreta del pedido (`tracking_token`). Con ella, la función `order_status` le devuelve solo número, estado, motivo, tipo y total (nunca nombre, teléfono ni dirección). La tarjeta aparece en la confirmación y arriba del menú, y se actualiza cada 15 segundos (`src/components/carrito/seguimiento-pedidos.tsx`).
+- Seguimiento del cliente: al pedir, su navegador guarda una clave secreta del pedido (`tracking_token`). Con ella, la función `order_status` le devuelve solo número, estado, motivo y tipo (nunca nombre, teléfono, dirección, platillos ni total). El número de pedido no sirve para consultar: no hay ninguna página con el número en la URL. La tarjeta aparece en la confirmación y arriba del menú, y se actualiza cada 15 segundos (`src/components/carrito/seguimiento-pedidos.tsx`).
 
 ---
 

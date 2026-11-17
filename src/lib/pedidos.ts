@@ -142,8 +142,6 @@ export type EstadoCliente = {
   estado: EstadoPedido;
   motivo: string | null;
   tipo: "recoger" | "domicilio";
-  total: number;
-  cambio: string;
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -169,7 +167,5 @@ export async function consultarEstados(tokens: string[]): Promise<EstadoCliente[
       estado: p.status as EstadoPedido,
       motivo: (p.status_reason as string | null) ?? null,
       tipo: p.order_type === "domicilio" ? "domicilio" : "recoger",
-      total: Number(p.total),
-      cambio: String(p.status_changed_at),
     }));
 }

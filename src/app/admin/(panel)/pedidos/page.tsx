@@ -27,7 +27,9 @@ export default async function PaginaPedidos() {
         <h1 className="font-display text-[44px] leading-none">Pedidos</h1>
         {nuevos > 0 && <span className="rounded-full bg-rosa px-3 py-1 text-sm font-bold text-white">{nuevos} nuevos</span>}
       </div>
-      <p className="mb-5 text-sm text-chocolate-suave">Se actualiza solo cada 30 segundos. Últimos {pedidos.length} pedidos.</p>
+      <p className="mb-5 text-sm text-chocolate-suave">
+        Acepta o rechaza cada pedido nuevo; el cliente ve el estado en el menú. Se actualiza solo cada 30 segundos.
+      </p>
 
       {pedidos.length === 0 && <p className="rounded-2xl bg-white p-5">Todavía no hay pedidos.</p>}
 
@@ -50,6 +52,11 @@ export default async function PaginaPedidos() {
                 {p.address && <> · {p.address}</>}
               </span>
               {p.notes && <span className="rounded-xl bg-mantequilla px-3 py-2 text-sm">Nota: {p.notes}</span>}
+              {p.status_reason && (
+                <span className="text-sm text-chocolate-suave">
+                  Motivo ({p.status === "rechazado" ? "rechazo" : "cancelación"}): {p.status_reason}
+                </span>
+              )}
             </div>
 
             <ul className="mt-3 flex flex-col divide-y divide-gris-linea rounded-xl bg-gris px-3">
@@ -71,7 +78,7 @@ export default async function PaginaPedidos() {
             </div>
 
             <div className="mt-3 flex flex-col gap-3 border-t border-gris-linea pt-3">
-              <CambiarEstado id={p.id} estado={p.status} />
+              <CambiarEstado id={p.id} numero={p.order_number} estado={p.status} />
               <div className="flex justify-end">
                 <BotonBorrar
                   accion={borrarPedido.bind(null, p.id)}

@@ -1,6 +1,7 @@
 -- Burrito Fly · Pedidos
 -- Pégalo completo en Supabase → SQL Editor → New query → Run (después de schema.sql y admin.sql).
--- Se puede volver a correr sin problema: no borra pedidos.
+-- Se puede volver a correr sin problema: no borra pedidos (también sirve para actualizar
+-- una instalación anterior: agrega las columnas y estados nuevos).
 
 -- 1. Número de pedido corto y legible: #1001, #1002, …
 create sequence if not exists public.orders_number_seq start with 1001;
@@ -16,7 +17,11 @@ create table if not exists public.orders (
   notes          text          check (notes is null or char_length(notes) <= 500),
   total          numeric(10, 2) not null check (total >= 0),
   status         text          not null default 'nuevo'
-                 check (status in ('nuevo', 'preparando', 'listo', 'entregado', 'cancelado')),
+                 check (status in ('nuevo', 'aceptado', 'preparando', 'listo', 'entregado', 'rechazado', 'cancelado')),
+  status_reason  text          check (status_reason is null or char_length(status_reason) <= 200),
+  status_changed_at timestamptz not null default now(),
+  -- Clave secreta y aleatoria para que SOLO quien hizo el pedido pueda ver su estado.
+  tracking_token uuid          not null default gen_random_uuid(),
   created_at     timestamptz   not null default now(),
   -- A domicilio necesita dirección; para recoger no lleva.
   constraint orders_direccion_segun_tipo check (
@@ -26,6 +31,35 @@ create table if not exists public.orders (
 );
 
 alter sequence public.orders_number_seq owned by public.orders.order_number;
+
+-- Actualización para instalaciones anteriores (si las columnas ya existen, no hace nada).
+alter table public.orders add column if not exists status_reason text
+  check (status_reason is null or char_length(status_reason) <= 200);
+alter table public.orders add column if not exists status_changed_at timestamptz not null default now();
+alter table public.orders add column if not exists tracking_token uuid not null default gen_random_uuid();
+alter table public.orders drop constraint if exists orders_status_check;
+alter table public.orders add constraint orders_status_check
+  check (status in ('nuevo', 'aceptado', 'preparando', 'listo', 'entregado', 'rechazado', 'cancelado'));
+create unique index if not exists orders_tracking_token_idx on public.orders (tracking_token);
+
+-- Guarda la hora de cada cambio de estado.
+create or replace function public.orders_marcar_cambio_estado()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.status is distinct from old.status then
+    new.status_changed_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_cambio_estado on public.orders;
+create trigger orders_cambio_estado
+  before update on public.orders
+  for each row execute function public.orders_marcar_cambio_estado();
 
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 create index if not exists orders_phone_created_idx on public.orders (phone, created_at desc);
@@ -111,6 +145,7 @@ declare
   v_recent   integer;
   v_order_id bigint;
   v_number   bigint;
+  v_token    uuid;
 begin
   -- Datos del cliente
   if char_length(v_name) not between 2 and 80 then
@@ -194,7 +229,7 @@ begin
 
   insert into public.orders (customer_name, phone, order_type, address, notes, total)
   values (v_name, v_phone, v_type, v_address, v_notes, v_total)
-  returning id, order_number into v_order_id, v_number;
+  returning id, order_number, tracking_token into v_order_id, v_number, v_token;
 
   insert into public.order_items (order_id, menu_item_id, item_name, unit_price, quantity, note)
   select v_order_id,
@@ -207,6 +242,7 @@ begin
 
   return jsonb_build_object(
     'order_number', v_number,
+    'tracking_token', v_token,
     'total', v_total,
     'order_type', v_type,
     'items', v_lines
@@ -217,3 +253,31 @@ $$;
 -- Solo esta función es pública; las tablas siguen cerradas.
 revoke all on function public.create_order(text, text, text, text, text, jsonb, numeric) from public;
 grant execute on function public.create_order(text, text, text, text, text, jsonb, numeric) to anon, authenticated;
+
+-- 6. Estado del pedido para el cliente ----------------------------------------------
+-- El cliente guarda en su navegador la clave secreta (tracking_token) de su pedido y con
+-- ella pregunta el estado. Solo responde número, estado, motivo, tipo y total: nunca
+-- nombre, teléfono ni dirección. Máximo 5 claves por consulta y pedidos de los últimos 2 días.
+create or replace function public.order_status(p_tokens uuid[])
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'tracking_token', o.tracking_token,
+           'order_number', o.order_number,
+           'status', o.status,
+           'status_reason', o.status_reason,
+           'order_type', o.order_type,
+           'total', o.total,
+           'status_changed_at', o.status_changed_at
+         ) order by o.created_at desc), '[]'::jsonb)
+  from public.orders o
+  where o.tracking_token = any (p_tokens[1:5])
+    and o.created_at > now() - interval '2 days';
+$$;
+
+revoke all on function public.order_status(uuid[]) from public;
+grant execute on function public.order_status(uuid[]) to anon, authenticated;

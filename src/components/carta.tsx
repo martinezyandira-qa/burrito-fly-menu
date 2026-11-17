@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BarraCategorias } from "@/components/barra-categorias";
 import { BotonWifi } from "@/components/boton-wifi";
 import { CarritoFlotante } from "@/components/carrito/carrito-flotante";
+import { SeguimientoPedidos } from "@/components/carrito/seguimiento-pedidos";
 import { IconoCheck, IconoFlechaAbajo, LogoGoogle } from "@/components/iconos";
 import { Pie } from "@/components/pie";
 import { TarjetaProducto } from "@/components/tarjeta-producto";
@@ -92,6 +93,11 @@ export async function Carta({ idioma }: { idioma: Idioma }) {
             </span>
           </a>
         </div>
+      </div>
+
+      {/* Estado de los pedidos de este cliente (solo aparece si hizo uno) */}
+      <div className="mx-auto max-w-280 px-4">
+        <SeguimientoPedidos idioma={idioma} className="max-w-155 pt-4" />
       </div>
 
       {/* 3. Nuestra carta */}

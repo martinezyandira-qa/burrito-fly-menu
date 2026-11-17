@@ -4,6 +4,7 @@
 // en una sola operación. Se usa la llave pública: el público no puede tocar las tablas.
 
 import type { CodigoError } from "@/i18n";
+import { esEstadoPedido, type EstadoPedido } from "@/lib/estados-pedido";
 import { supabase } from "@/lib/supabase";
 
 export type DatosPedido = {
@@ -30,7 +31,15 @@ export type LineaConfirmada = {
 };
 
 export type RespuestaPedido =
-  | { ok: true; numero: number; total: number; tipo: "recoger" | "domicilio"; lineas: LineaConfirmada[] }
+  | {
+      ok: true;
+      numero: number;
+      /** Clave secreta para consultar el estado de este pedido */
+      token: string;
+      total: number;
+      tipo: "recoger" | "domicilio";
+      lineas: LineaConfirmada[];
+    }
   | {
       ok: false;
       error: CodigoError;
@@ -108,12 +117,59 @@ export async function enviarPedido(datos: DatosPedido): Promise<RespuestaPedido>
     return { ok: false, error: codigo };
   }
 
-  const r = data as { order_number: number; total: number; order_type: "recoger" | "domicilio"; items: LineaConfirmada[] };
+  const r = data as {
+    order_number: number;
+    tracking_token: string;
+    total: number;
+    order_type: "recoger" | "domicilio";
+    items: LineaConfirmada[];
+  };
   return {
     ok: true,
     numero: Number(r.order_number),
+    token: String(r.tracking_token),
     total: Number(r.total),
     tipo: r.order_type,
     lineas: (r.items ?? []).map((l) => ({ ...l, unit_price: Number(l.unit_price) })),
   };
+}
+
+// ---------- Seguimiento ----------
+
+export type EstadoCliente = {
+  token: string;
+  numero: number;
+  estado: EstadoPedido;
+  motivo: string | null;
+  tipo: "recoger" | "domicilio";
+  total: number;
+  cambio: string;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Estado de los pedidos de este cliente, con las claves secretas que guardó su navegador.
+ * Devuelve null si no se pudo consultar (sin conexión), para no confundirlo con "no existe".
+ */
+export async function consultarEstados(tokens: string[]): Promise<EstadoCliente[] | null> {
+  const validos = (Array.isArray(tokens) ? tokens : []).filter((t) => typeof t === "string" && UUID.test(t)).slice(0, 5);
+  if (validos.length === 0) return [];
+
+  const { data, error } = await supabase.rpc("order_status", { p_tokens: validos });
+  if (error) {
+    console.error("order_status falló:", error.message);
+    return null;
+  }
+  return ((data ?? []) as Record<string, unknown>[])
+    .filter((p) => esEstadoPedido(p.status))
+    .map((p) => ({
+      token: String(p.tracking_token),
+      numero: Number(p.order_number),
+      estado: p.status as EstadoPedido,
+      motivo: (p.status_reason as string | null) ?? null,
+      tipo: p.order_type === "domicilio" ? "domicilio" : "recoger",
+      total: Number(p.total),
+      cambio: String(p.status_changed_at),
+    }));
 }

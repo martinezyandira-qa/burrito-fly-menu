@@ -1,5 +1,6 @@
 // Acceso a datos del panel (solo servidor). Toda lectura y escritura usa la sesión del
 // admin, y Supabase (RLS) decide qué se permite. Aquí se centraliza la comprobación.
+import type { EstadoPedido } from "@/lib/estados-pedido";
 import { crearClienteServidor } from "@/lib/supabase-servidor";
 
 export type CategoriaAdmin = {
@@ -88,8 +89,7 @@ export async function obtenerPlatilloAdmin(id: number): Promise<PlatilloAdmin | 
   return data ? { ...data, price: Number(data.price) } : null;
 }
 
-export const ESTADOS_PEDIDO = ["nuevo", "preparando", "listo", "entregado", "cancelado"] as const;
-export type EstadoPedido = (typeof ESTADOS_PEDIDO)[number];
+export { ESTADOS_PEDIDO, type EstadoPedido } from "@/lib/estados-pedido";
 
 export type PedidoAdmin = {
   id: number;
@@ -101,6 +101,7 @@ export type PedidoAdmin = {
   notes: string | null;
   total: number;
   status: EstadoPedido;
+  status_reason: string | null;
   created_at: string;
   order_items: { id: number; item_name: string; unit_price: number; quantity: number; note: string | null }[];
 };
@@ -111,7 +112,7 @@ export async function obtenerPedidosAdmin(limite = 60): Promise<PedidoAdmin[]> {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, phone, order_type, address, notes, total, status, created_at, order_items (id, item_name, unit_price, quantity, note)",
+      "id, order_number, customer_name, phone, order_type, address, notes, total, status, status_reason, created_at, order_items (id, item_name, unit_price, quantity, note)",
     )
     .order("created_at", { ascending: false })
     .order("id", { referencedTable: "order_items" })

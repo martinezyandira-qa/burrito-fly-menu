@@ -77,7 +77,7 @@ export const TEXTOS = {
       irMenu: "Ir al menú",
       recibido: "¡Pedido recibido!",
       numero: "Número de pedido",
-      guardaNumero: "Guarda este número por si necesitas preguntar por tu pedido.",
+      guardaNumero: "Guarda este número. Aquí y en el menú verás cuando lo aceptemos y cuando esté listo.",
       paraRecoger: "Para recoger",
       aDomicilio: "A domicilio",
       volverMenu: "Volver al menú",
@@ -98,6 +98,34 @@ export const TEXTOS = {
         MUY_RAPIDO: "Espera un momento y vuelve a intentarlo.",
         GENERAL: "No pudimos enviar tu pedido. Revisa tu conexión e intenta de nuevo.",
       },
+    },
+    seguimiento: {
+      titulo: "Tu pedido",
+      consultando: "Consultando estado…",
+      sinConexion: "No pudimos actualizar el estado. Reintentando…",
+      ocultar: "Ocultar",
+      motivo: "Motivo:",
+      pasos: ["Recibido", "Aceptado", "Preparando", "Listo"],
+      estados: {
+        nuevo: "Esperando confirmación",
+        aceptado: "Aceptado",
+        preparando: "En preparación",
+        listo: "Listo",
+        entregado: "Entregado",
+        rechazado: "Rechazado",
+        cancelado: "Cancelado",
+      },
+      mensajes: {
+        nuevo: "Recibimos tu pedido. En un momento el restaurante lo acepta.",
+        aceptado: "¡Tu pedido fue aceptado! Pronto empezamos a prepararlo.",
+        preparando: "Estamos preparando tu pedido.",
+        listoRecoger: "¡Tu pedido está listo! Ya puedes pasar a recogerlo.",
+        listoDomicilio: "¡Tu pedido está listo y va en camino!",
+        entregado: "Pedido entregado. ¡Buen provecho!",
+        rechazado: "Lo sentimos, el restaurante no pudo aceptar tu pedido.",
+        cancelado: "Tu pedido fue cancelado.",
+      },
+      seActualiza: "Esta tarjeta se actualiza sola.",
     },
   },
   en: {
@@ -167,7 +195,7 @@ export const TEXTOS = {
       irMenu: "Go to the menu",
       recibido: "Order received!",
       numero: "Order number",
-      guardaNumero: "Keep this number in case you need to ask about your order.",
+      guardaNumero: "Keep this number. Here and on the menu you'll see when we accept it and when it's ready.",
       paraRecoger: "Pickup",
       aDomicilio: "Delivery",
       volverMenu: "Back to menu",
@@ -189,6 +217,34 @@ export const TEXTOS = {
         GENERAL: "We couldn't send your order. Check your connection and try again.",
       },
     },
+    seguimiento: {
+      titulo: "Your order",
+      consultando: "Checking status…",
+      sinConexion: "We couldn't update the status. Retrying…",
+      ocultar: "Hide",
+      motivo: "Reason:",
+      pasos: ["Received", "Accepted", "Preparing", "Ready"],
+      estados: {
+        nuevo: "Waiting for confirmation",
+        aceptado: "Accepted",
+        preparando: "Preparing",
+        listo: "Ready",
+        entregado: "Delivered",
+        rechazado: "Declined",
+        cancelado: "Cancelled",
+      },
+      mensajes: {
+        nuevo: "We got your order. The restaurant will accept it in a moment.",
+        aceptado: "Your order was accepted! We'll start preparing it soon.",
+        preparando: "We're preparing your order.",
+        listoRecoger: "Your order is ready! You can pick it up now.",
+        listoDomicilio: "Your order is ready and on its way!",
+        entregado: "Order delivered. Enjoy!",
+        rechazado: "Sorry, the restaurant couldn't accept your order.",
+        cancelado: "Your order was cancelled.",
+      },
+      seActualiza: "This card updates automatically.",
+    },
   },
 } satisfies Record<Idioma, unknown>;
 
@@ -204,3 +260,4 @@ export const rutaPedido = (idioma: Idioma) => (idioma === "en" ? "/en/order" : "
 export type TextosCarrito = (typeof TEXTOS)["es"]["carrito"];
 export type TextosPedido = (typeof TEXTOS)["es"]["pedido"];
 export type CodigoError = keyof TextosPedido["errores"];
+export type TextosSeguimiento = (typeof TEXTOS)["es"]["seguimiento"];

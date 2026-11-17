@@ -12,9 +12,11 @@ import {
   vaciarCarrito,
   type LineaCarrito,
 } from "@/lib/carrito";
+import { recordarPedido } from "@/lib/mis-pedidos";
 import { enviarPedido, type RespuestaPedido } from "@/lib/pedidos";
 import { precioTexto } from "@/lib/precio";
 import { LineasCarrito } from "./lineas-carrito";
+import { SeguimientoPedidos } from "./seguimiento-pedidos";
 
 type Confirmado = Extract<RespuestaPedido, { ok: true }> & { nombres: Record<number, string> };
 
@@ -124,6 +126,7 @@ function Formulario({
       if (r.ok) {
         const nombres = Object.fromEntries(copia.map((l) => [l.id, idioma === "en" ? l.nombreEn || l.nombre : l.nombre]));
         alConfirmar({ ...r, nombres });
+        recordarPedido({ token: r.token, numero: r.numero });
         vaciarCarrito();
         window.scrollTo({ top: 0 });
         return;
@@ -302,6 +305,8 @@ function Confirmacion({ pedido, idioma }: { pedido: Confirmado; idioma: Idioma }
         </span>
         <p className="mt-1 max-w-80 text-sm">{t.guardaNumero}</p>
       </section>
+
+      <SeguimientoPedidos idioma={idioma} token={pedido.token} />
 
       <section aria-labelledby="titulo-confirmado" className="flex flex-col gap-2 rounded-[22px] bg-white p-4">
         <h3 id="titulo-confirmado" className="font-display text-[28px] leading-none">

@@ -6,7 +6,8 @@
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { ETIQUETA_MENU } from "@/data/menu";
-import { ESTADOS_PEDIDO, clienteAdmin, crearSlug, type EstadoPedido } from "@/lib/admin";
+import { clienteAdmin, crearSlug } from "@/lib/admin";
+import { ESTADOS_CON_MOTIVO, MOTIVO_MAXIMO, SIGUIENTES_ESTADOS, esEstadoPedido, type EstadoPedido } from "@/lib/estados-pedido";
 import { BUCKET_FOTOS, rutaEnBucket } from "@/lib/supabase-config";
 import { crearClienteServidor } from "@/lib/supabase-servidor";
 
@@ -152,13 +153,30 @@ export async function borrarPlatillo(id: number): Promise<Resultado> {
 
 // ---------- Pedidos ----------
 
-export async function cambiarEstadoPedido(id: number, estado: EstadoPedido): Promise<Resultado> {
+/** Aceptar, rechazar o avanzar un pedido. Solo permite los pasos de SIGUIENTES_ESTADOS. */
+export async function cambiarEstadoPedido(id: number, estado: EstadoPedido, motivo = ""): Promise<Resultado> {
   try {
-    if (!ESTADOS_PEDIDO.includes(estado)) return { error: "Estado inválido." };
+    if (!esEstadoPedido(estado)) return { error: "Estado inválido." };
     const supabase = await clienteAdmin();
-    const { error } = await supabase.from("orders").update({ status: estado }).eq("id", id);
+    const { data: actual } = await supabase.from("orders").select("status").eq("id", id).maybeSingle();
+    if (!actual) return { error: "Ese pedido ya no existe." };
+    const desde = actual.status as EstadoPedido;
+    if (!SIGUIENTES_ESTADOS[desde]?.includes(estado)) {
+      refresh();
+      return { error: "Ese pedido ya cambió de estado. Revisa la lista actualizada." };
+    }
+
+    const razon = ESTADOS_CON_MOTIVO.includes(estado) ? String(motivo).trim().slice(0, MOTIVO_MAXIMO) || null : null;
+    // Solo cambia si sigue en el estado que viste (por si otra persona lo cambió al mismo tiempo).
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status: estado, status_reason: razon })
+      .eq("id", id)
+      .eq("status", desde)
+      .select("id");
     if (error) return { error: `No se pudo cambiar: ${error.message}` };
     refresh();
+    if (!data?.length) return { error: "Ese pedido ya cambió de estado. Revisa la lista actualizada." };
     return { ok: true };
   } catch (e) {
     return { error: mensaje(e) };

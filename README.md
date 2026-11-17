@@ -94,6 +94,15 @@ Los platillos y categorías viven en Supabase, en las tablas `categories` y `men
 - La app lee con `obtenerCarta()` en `src/data/menu.ts`, guardado en caché: un cambio en Supabase se ve en el menú en uno o dos minutos.
 - Variables necesarias (en `.env.local` y en Vercel → Settings → Environment Variables): `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
+### Panel de administrador (`/admin`)
+- Entrada en `/admin/login` con correo y contraseña (Supabase Auth). No hay registro: los usuarios se crean en Supabase → Authentication.
+- `src/proxy.ts` protege todo `/admin` (sin sesión → login). Además, cada página y cada acción comprueba que el usuario esté en la tabla `admins`.
+- `supabase/admin.sql` crea la tabla `admins`, la función `is_admin()`, las reglas para que solo los admins escriban, y el bucket público `menu-images` (solo admins suben y borran). Al final tiene la línea para agregar tu correo como admin.
+- Platillos: lista por categoría, crear, editar, borrar (con confirmación) e interruptor Disponible/Agotado. Las fotos se achican en el navegador y se suben a Storage.
+- Categorías: crear, editar, borrar (solo si no tienen platillos) y cambiar el orden con flechas.
+- Al guardar, el panel borra la caché del menú (`updateTag("menu")`), así el menú público muestra el cambio de inmediato, sin volver a publicar.
+- Nunca se usa la llave `service_role`: todo se escribe con la sesión del admin y la llave pública, y RLS decide.
+
 ---
 
 ## 5. Cómo está organizado
@@ -118,10 +127,17 @@ src/
   config.ts                    Datos generales del restaurante
   i18n.ts                      Textos de la interfaz en español e inglés
   data/menu.ts                 Lee la carta desde Supabase (obtenerCarta) y sus ayudas
-  lib/supabase.ts              Conexión con Supabase (usa las variables de entorno)
+  lib/supabase.ts              Conexión pública con Supabase (menú, en caché)
+  lib/supabase-servidor.ts     Conexión con la sesión del admin (panel)
+  lib/supabase-navegador.ts    Conexión desde el navegador (subir fotos)
+  lib/admin.ts                 Revisión de permisos y lectura de datos del panel
+  proxy.ts                     Protege /admin (redirige al login si no hay sesión)
+  app/admin/                   Panel: login, platillos, categorías y acciones (acciones.ts)
+  components/admin/            Formularios, interruptor y botón de borrar del panel
 supabase/
   schema.sql                   Tablas, índice y seguridad (RLS)
   seed.sql                     Los 24 platillos originales
+  admin.sql                    Tabla admins, reglas de escritura y bucket de fotos
 public/
   local-burrito-fly.jpg        Foto del local
   logo-burrito-fly.svg         Logo (pie de página)

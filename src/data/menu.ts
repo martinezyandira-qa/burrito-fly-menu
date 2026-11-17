@@ -1,7 +1,7 @@
 // Datos de la carta de Burrito Fly, leídos desde Supabase (tablas categories y menu_items).
 // Para agregar o cambiar un producto: edítalo en Supabase. Las fotos siguen en /public/productos.
 
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import type { Idioma } from "@/i18n";
 import { supabase } from "@/lib/supabase";
 
@@ -54,10 +54,15 @@ const fotoPorDefecto = (slug: string) => `/productos/${slug}.jpg`;
  * con available = true, también en orden. Se guarda en caché ("minutes": se vuelve a
  * consultar a Supabase como máximo una vez por minuto), así la página carga rápido y
  * los cambios en Supabase aparecen poco después sin volver a publicar.
+ * La etiqueta "menu" permite que el panel de admin borre esta caché al guardar un cambio,
+ * y entonces el menú lo muestra de inmediato.
  */
+export const ETIQUETA_MENU = "menu";
+
 export async function obtenerCarta(): Promise<Categoria[]> {
   "use cache";
   cacheLife("minutes");
+  cacheTag(ETIQUETA_MENU);
 
   const { data, error } = await supabase
     .from("categories")
@@ -72,20 +77,24 @@ export async function obtenerCarta(): Promise<Categoria[]> {
   if (error) throw new Error(`No se pudo leer el menú de Supabase: ${error.message}`);
 
   return (data ?? [])
-    .map((c) => ({
-      slug: c.slug,
-      nombre: c.name,
-      nombreEn: c.name_en,
-      imagen: c.image_url ?? fotoPorDefecto(c.menu_items[0]?.slug ?? c.slug),
-      productos: c.menu_items.map((p) => ({
+    .map((c) => {
+      const productos = c.menu_items.map((p) => ({
         slug: p.slug,
         nombre: p.name,
         precio: Number(p.price),
         descripcion: p.description ?? "",
         imagen: p.image_url ?? fotoPorDefecto(p.slug),
         en: { nombre: p.name_en, descripcion: p.description_en ?? "" },
-      })),
-    }))
+      }));
+      return {
+        slug: c.slug,
+        nombre: c.name,
+        nombreEn: c.name_en,
+        // Sin foto propia, la categoría usa la del primer platillo.
+        imagen: c.image_url ?? productos[0]?.imagen ?? fotoPorDefecto(c.slug),
+        productos,
+      };
+    })
     // Una categoría sin platillos disponibles no se muestra.
     .filter((c) => c.productos.length > 0);
 }

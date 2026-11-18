@@ -1,7 +1,19 @@
 // Acceso a datos del panel (solo servidor). Toda lectura y escritura usa la sesión del
 // admin, y Supabase (RLS) decide qué se permite. Aquí se centraliza la comprobación.
 import type { EstadoPedido } from "@/lib/estados-pedido";
+import { connection } from "next/server";
 import { crearClienteServidor } from "@/lib/supabase-servidor";
+
+/**
+ * Cliente para las PÁGINAS del panel. `connection()` hace que esta parte espere la visita
+ * real: así Next.js no la calcula al precargar enlaces (revisar la sesión compara la fecha
+ * de vencimiento con la hora actual, y eso no se permite al precargar), y los datos del
+ * panel siempre se leen frescos. Las acciones usan clienteAdmin().
+ */
+async function clientePagina() {
+  await connection();
+  return crearClienteServidor();
+}
 
 export type CategoriaAdmin = {
   id: number;
@@ -33,7 +45,7 @@ export type Sesion =
 
 /** ¿Quién está usando el panel? Verifica la sesión y que el usuario esté en la tabla admins. */
 export async function obtenerSesion(): Promise<Sesion> {
-  const supabase = await crearClienteServidor();
+  const supabase = await clientePagina();
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   if (!claims) return { estado: "sin-sesion" };
@@ -56,7 +68,7 @@ export async function clienteAdmin() {
 }
 
 export async function obtenerCategoriasAdmin(): Promise<CategoriaAdmin[]> {
-  const supabase = await crearClienteServidor();
+  const supabase = await clientePagina();
   const { data, error } = await supabase
     .from("categories")
     .select("id, slug, name, name_en, image_url, sort_order")
@@ -68,7 +80,7 @@ export async function obtenerCategoriasAdmin(): Promise<CategoriaAdmin[]> {
 
 /** Todos los platillos, también los agotados (la regla RLS de admins lo permite). */
 export async function obtenerPlatillosAdmin(): Promise<PlatilloAdmin[]> {
-  const supabase = await crearClienteServidor();
+  const supabase = await clientePagina();
   const { data, error } = await supabase
     .from("menu_items")
     .select("id, category_id, slug, name, name_en, description, description_en, price, image_url, available, sort_order")
@@ -79,7 +91,7 @@ export async function obtenerPlatillosAdmin(): Promise<PlatilloAdmin[]> {
 }
 
 export async function obtenerPlatilloAdmin(id: number): Promise<PlatilloAdmin | null> {
-  const supabase = await crearClienteServidor();
+  const supabase = await clientePagina();
   const { data, error } = await supabase
     .from("menu_items")
     .select("id, category_id, slug, name, name_en, description, description_en, price, image_url, available, sort_order")
@@ -108,7 +120,7 @@ export type PedidoAdmin = {
 
 /** Pedidos más recientes primero (solo admins pueden leerlos, por RLS). */
 export async function obtenerPedidosAdmin(limite = 60): Promise<PedidoAdmin[]> {
-  const supabase = await crearClienteServidor();
+  const supabase = await clientePagina();
   const { data, error } = await supabase
     .from("orders")
     .select(

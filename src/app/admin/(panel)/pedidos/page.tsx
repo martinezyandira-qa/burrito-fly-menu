@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { borrarPedido } from "@/app/admin/acciones";
 import { BotonBorrar } from "@/components/admin/boton-borrar";
-import { ActualizarSolo, CambiarEstado, EtiquetaEstado } from "@/components/admin/pedidos";
+import { ActualizarSolo, BotonPruebaTelegram, CambiarEstado, EtiquetaEstado } from "@/components/admin/pedidos";
 import { obtenerPedidosAdmin } from "@/lib/admin";
 import { precioTexto } from "@/lib/precio";
 
@@ -31,11 +31,19 @@ export default async function PaginaPedidos() {
         Acepta o rechaza cada pedido nuevo; el cliente ve el estado en el menú. Se actualiza solo cada 30 segundos.
       </p>
 
+      <div className="mb-5">
+        <BotonPruebaTelegram />
+      </div>
+
       {pedidos.length === 0 && <p className="rounded-2xl bg-white p-5">Todavía no hay pedidos.</p>}
 
       <ul className="flex flex-col gap-3">
         {pedidos.map((p) => (
-          <li key={p.id} className={`rounded-2xl bg-white p-4 ${p.status === "nuevo" ? "ring-2 ring-rosa" : ""}`}>
+          <li
+            key={p.id}
+            id={`pedido-${p.order_number}`}
+            className={`scroll-mt-4 rounded-2xl bg-white p-4 target:ring-4 target:ring-mantequilla-oscuro ${p.status === "nuevo" ? "ring-2 ring-rosa" : ""}`}
+          >
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-display text-[34px] leading-none tabular-nums">#{p.order_number}</span>
               <EtiquetaEstado estado={p.status} />

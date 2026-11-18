@@ -10,6 +10,7 @@ import { clienteAdmin, crearSlug } from "@/lib/admin";
 import { ESTADOS_CON_MOTIVO, MOTIVO_MAXIMO, SIGUIENTES_ESTADOS, esEstadoPedido, type EstadoPedido } from "@/lib/estados-pedido";
 import { BUCKET_FOTOS, rutaEnBucket } from "@/lib/supabase-config";
 import { crearClienteServidor } from "@/lib/supabase-servidor";
+import { enviarTelegram, mensajePedido } from "@/lib/telegram";
 
 export type Resultado = { error?: string; ok?: boolean } | undefined;
 
@@ -193,6 +194,36 @@ export async function borrarPedido(id: number): Promise<Resultado> {
   } catch (e) {
     return { error: mensaje(e) };
   }
+}
+
+/** Botón "Enviar mensaje de prueba": manda a Telegram un pedido de ejemplo (solo admins). */
+export async function probarTelegram(): Promise<Resultado> {
+  try {
+    await clienteAdmin();
+  } catch (e) {
+    return { error: mensaje(e) };
+  }
+  const r = await enviarTelegram(
+    mensajePedido({
+      prueba: true,
+      numero: 0,
+      nombre: "Ana <b>López</b> & Cía",
+      telefono: "5512345678",
+      tipo: "domicilio",
+      direccion: "Calle 5 #123 <esquina> & Av. Juárez",
+      notas: "Pago con billete de $500 > 2 * 100 & <script>alert(1)</script>",
+      total: 20.97,
+      lineas: [
+        { nombre: "Burrito", cantidad: 2, precioUnitario: 8.99, nota: "sin cebolla <extra> & salsa" },
+        { nombre: "Horchata", cantidad: 1, precioUnitario: 2.99, nota: null },
+      ],
+    }),
+  );
+  if (!r.ok) {
+    console.error(`[telegram] Mensaje de prueba falló. ${r.error}`);
+    return { error: r.error };
+  }
+  return { ok: true };
 }
 
 // ---------- Categorías ----------

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
-import { cambiarEstadoPedido } from "@/app/admin/acciones";
+import { cambiarEstadoPedido, probarTelegram } from "@/app/admin/acciones";
 import { MOTIVO_MAXIMO, SIGUIENTES_ESTADOS, type EstadoPedido } from "@/lib/estados-pedido";
 import { AVISO_ERROR, AYUDA, BOTON, BOTON_CLARO, BOTON_OSCURO, BOTON_PELIGRO, CAMPO } from "./estilos";
 
@@ -217,4 +217,41 @@ export function ActualizarSolo({ segundos = 30 }: { segundos?: number }) {
     return () => clearInterval(id);
   }, [router, segundos]);
   return null;
+}
+
+/** Manda a Telegram un pedido de ejemplo para comprobar que los avisos llegan. */
+export function BotonPruebaTelegram() {
+  const [pendiente, iniciar] = useTransition();
+  const [resultado, setResultado] = useState<{ ok: boolean; texto: string } | null>(null);
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <button
+        type="button"
+        disabled={pendiente}
+        onClick={() => {
+          setResultado(null);
+          iniciar(async () => {
+            const r = await probarTelegram();
+            setResultado(
+              r?.error
+                ? { ok: false, texto: r.error }
+                : { ok: true, texto: "✓ Mensaje enviado. Revisa tu Telegram." },
+            );
+          });
+        }}
+        className={BOTON_CLARO}
+      >
+        {pendiente ? "Enviando…" : "Enviar mensaje de prueba a Telegram"}
+      </button>
+      {resultado && (
+        <p
+          role={resultado.ok ? "status" : "alert"}
+          className={resultado.ok ? "rounded-xl bg-[#1f8a4c]/10 px-3.5 py-3 text-sm font-semibold text-[#1f6b3c]" : AVISO_ERROR}
+        >
+          {resultado.texto}
+        </p>
+      )}
+    </div>
+  );
 }

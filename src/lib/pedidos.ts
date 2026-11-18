@@ -3,9 +3,11 @@
 // create_order de Supabase, que calcula precios y total leyendo menu_items y guarda todo
 // en una sola operación. Se usa la llave pública: el público no puede tocar las tablas.
 
+import { after } from "next/server";
 import type { CodigoError } from "@/i18n";
 import { esEstadoPedido, type EstadoPedido } from "@/lib/estados-pedido";
 import { supabase } from "@/lib/supabase";
+import { avisarPedidoNuevo } from "@/lib/telegram";
 
 export type DatosPedido = {
   nombre: string;
@@ -124,13 +126,37 @@ export async function enviarPedido(datos: DatosPedido): Promise<RespuestaPedido>
     order_type: "recoger" | "domicilio";
     items: LineaConfirmada[];
   };
+  const lineasGuardadas = (r.items ?? []).map((l) => ({ ...l, unit_price: Number(l.unit_price) }));
+
+  // Aviso por Telegram DESPUÉS de responder al cliente: no lo hace esperar y, si falla,
+  // el pedido ya está guardado y su confirmación no cambia (solo se registra el error).
+  // Precios y total son los que calculó y guardó Supabase.
+  const aviso = {
+    numero: Number(r.order_number),
+    nombre: String(datos.nombre ?? "").trim(),
+    telefono,
+    tipo: r.order_type,
+    direccion: r.order_type === "domicilio" ? String(datos.direccion ?? "").trim() || null : null,
+    notas: String(datos.notas ?? "").trim() || null,
+    total: Number(r.total),
+    lineas: lineasGuardadas.map((l) => ({
+      nombre: l.item_name,
+      cantidad: Number(l.quantity),
+      precioUnitario: l.unit_price,
+      nota: l.note,
+    })),
+  };
+  after(() =>
+    avisarPedidoNuevo(aviso).catch((e) => console.error("[telegram] Error inesperado:", e instanceof Error ? e.message : e)),
+  );
+
   return {
     ok: true,
     numero: Number(r.order_number),
     token: String(r.tracking_token),
     total: Number(r.total),
     tipo: r.order_type,
-    lineas: (r.items ?? []).map((l) => ({ ...l, unit_price: Number(l.unit_price) })),
+    lineas: lineasGuardadas,
   };
 }
 
